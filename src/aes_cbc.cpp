@@ -4,6 +4,10 @@ extern "C" {
 #include "cryptoauthlib.h"
 }
 
+const uint8_t iv[] = {
+    0x0F, 0x04, 0x01, 0x0A, 0x03, 0x02, 0x05, 0x08, 0x06, 0x0B, 0x00, 0x09, 0x0C, 0x0D, 0x0E, 
+};
+
 /* \brief Encrypt data using AES CBC algorithme
  *  \param[in] cfg          Logical interface configuration. Some predefined
  *                          configurations can be found in atca_cfgs.h
@@ -14,7 +18,7 @@ extern "C" {
  *  \param[in] key          Slot number of the key
  *  \return ATCA_SUCCESS on success, otherwise an error code.
  */
-ATCA_STATUS aes_cbc_encrypt(ATCAIfaceCfg *cfg, uint8_t *data, int len, uint8_t *iv, uint8_t *ciphertext, uint8_t key)
+ATCA_STATUS aes_cbc_encrypt(ATCAIfaceCfg *cfg, uint8_t *data, int len, uint8_t *ciphertext, uint8_t key)
 {
 
     atca_aes_cbc_ctx_t ctx;
@@ -30,7 +34,7 @@ ATCA_STATUS aes_cbc_encrypt(ATCAIfaceCfg *cfg, uint8_t *data, int len, uint8_t *
     ATCA_STATUS status = atcab_init(cfg);
     if (status == ATCA_SUCCESS)
     {
-        status = atcab_aes_cbc_init(&ctx, key, 0, tmp_iv);
+        status = atcab_aes_cbc_init(&ctx, key, 0, iv);
 
         if (status != ATCA_SUCCESS)
         {
@@ -38,7 +42,7 @@ ATCA_STATUS aes_cbc_encrypt(ATCAIfaceCfg *cfg, uint8_t *data, int len, uint8_t *
             Serial.println(status, HEX);
             return status;
         }
-        memcpy(iv, tmp_iv, IV_LENGTH_CBC);
+        // memcpy(iv, tmp_iv, IV_LENGTH_CBC);
         memcpy(tmp_data, data, len);
 
         int max = len / 16;
@@ -67,7 +71,7 @@ ATCA_STATUS aes_cbc_encrypt(ATCAIfaceCfg *cfg, uint8_t *data, int len, uint8_t *
  *  \param[in] key          Slot number of the key
  *  \return ATCA_SUCCESS on success, otherwise an error code.
  */
-ATCA_STATUS aes_cbc_decrypt(ATCAIfaceCfg *cfg, uint8_t *ciphertext, int len, uint8_t *iv, uint8_t *plaintext, uint8_t key)
+ATCA_STATUS aes_cbc_decrypt(ATCAIfaceCfg *cfg, uint8_t *ciphertext, int len, uint8_t *plaintext, uint8_t key)
 {
 
     atca_aes_cbc_ctx_t ctx;
@@ -82,7 +86,6 @@ ATCA_STATUS aes_cbc_decrypt(ATCAIfaceCfg *cfg, uint8_t *ciphertext, int len, uin
     if (status == ATCA_SUCCESS)
     {
         status = atcab_aes_cbc_init(&ctx, key, 0, iv);
-
         if (status != ATCA_SUCCESS)
         {
             Serial.print(F("ERROR Decrypt: atcab_aes_cbc_init, Code Error 0x"));
